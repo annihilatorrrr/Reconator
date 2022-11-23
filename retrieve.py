@@ -18,10 +18,8 @@ t = cur.fetchall()
 res = t[0][0]
 final = base64.standard_b64decode(res)
 final = final.decode('utf-8')
-f = open('/app/results/{}-output.txt'.format(url), 'w')
-f.write(final)
-f.close()
-
+with open(f'/app/results/{url}-output.txt', 'w') as f:
+    f.write(final)
 conn.commit()
 
 cur.execute(f"select gau from output where domain = '{url}'")
@@ -30,9 +28,7 @@ t = cur.fetchall()
 res = t[0][0]
 final = base64.standard_b64decode(res)
 final = final.decode('utf-8')
-f = open('/app/results/{}-gau.txt'.format(url), 'w')
-f.write(final)
-f.close()
-
+with open(f'/app/results/{url}-gau.txt', 'w') as f:
+    f.write(final)
 cur.close()
 conn.close()

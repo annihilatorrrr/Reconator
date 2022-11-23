@@ -27,43 +27,34 @@ cur = conn.cursor()
 cur.execute("select * from output;")
 t = cur.fetchall()
 
-doms = []
-
-for i in t:
-  doms.append(i[0])
+doms = [i[0] for i in t]
 
 if url in doms:
   try:
-    f = open('results/{}-output.txt'.format(url), 'r')
-    res1 = f.read()
-    f.close()
-  
-    f = open('results/{}-gau.txt'.format(url), 'r')
-    res2 = f.read()
-    f.close()
-  
+    with open(f'results/{url}-output.txt', 'r') as f:
+      res1 = f.read()
+    with open(f'results/{url}-gau.txt', 'r') as f:
+      res2 = f.read()
     res1 = bytes(res1, 'utf-8')
     final1 = base64.standard_b64encode(res1)
     final1 = final1.decode('utf-8')
-  
+
     res2 = bytes(res2, 'utf-8')
     final2 = base64.standard_b64encode(res2)
     final2 = final2.decode('utf-8')
-  
-  
+
+
     cur.execute(f"update output set result = '{final1}' where domain = '{url}';")
     conn.commit()
     cur.execute(f"update output set gau = '{final2}' where domain = '{url}';")
     conn.commit()
   except:
-    f = open('results/{}-output.txt'.format(url), 'r')
-    res1 = f.read()
-    f.close()
-  
+    with open(f'results/{url}-output.txt', 'r') as f:
+      res1 = f.read()
     res1 = bytes(res1, 'utf-8')
     final1 = base64.standard_b64encode(res1)
     final1 = final1.decode('utf-8')
-  
+
     cur.execute(f"update output set result = '{final1}' where domain = '{url}';")
     conn.commit()
     cur.execute(f"update output set gau = 'The Gathered URLs not run yet !' where domain = '{url}';")
@@ -71,35 +62,27 @@ if url in doms:
 
 else:
   try:
-    #read from output.txt and dump in database
-    f = open('results/{}-output.txt'.format(url), 'r')
-    res1 = f.read()
-    f.close()
-  
-    f = open('results/{}-gau.txt'.format(url), 'r')
-    res2 = f.read()
-    f.close()
-  
+    with open(f'results/{url}-output.txt', 'r') as f:
+      res1 = f.read()
+    with open(f'results/{url}-gau.txt', 'r') as f:
+      res2 = f.read()
     res1 = bytes(res1, 'utf-8')
     final1 = base64.standard_b64encode(res1)
     final1 = final1.decode('utf-8')
-  
+
     res2 = bytes(res2, 'utf-8')
     final2 = base64.standard_b64encode(res2)
     final2 = final2.decode('utf-8')
-  
+
     cur.execute(f"insert into output values ('{url}', '{final1}', '{final2}');")
     conn.commit()
   except:
-    #read from output.txt and dump in database
-    f = open('results/{}-output.txt'.format(url), 'r')
-    res1 = f.read()
-    f.close()
-  
+    with open(f'results/{url}-output.txt', 'r') as f:
+      res1 = f.read()
     res1 = bytes(res1, 'utf-8')
     final1 = base64.standard_b64encode(res1)
     final1 = final1.decode('utf-8')
-    
+
     cur.execute(f"insert into output values ('{url}', '{final1}', 'The Gathered URLs not run yet !');")
     conn.commit()
 

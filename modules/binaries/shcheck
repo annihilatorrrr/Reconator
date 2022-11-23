@@ -115,18 +115,16 @@ def colorize(string, alert):
         'info':     bcolors.OKBLUE + string + bcolors.ENDC,
         'deprecated': string # No color for deprecated headers or not-an-issue ones
     }
-    return color[alert] if alert in color else string
+    return color.get(alert, string)
 
 
 def parse_headers(hdrs):
     global headers
-    headers = dict((x.lower(), y) for x, y in hdrs)
+    headers = {x.lower(): y for x, y in hdrs}
 
 
 def append_port(target, port):
-    return target[:-1] + ':' + port + '/' \
-        if target[-1:] == '/' \
-        else target + ':' + port + '/'
+    return f'{target[:-1]}:{port}/' if target[-1:] == '/' else f'{target}:{port}/'
 
 
 def build_opener(proxy, ssldisabled):
@@ -150,7 +148,7 @@ def build_opener(proxy, ssldisabled):
 def normalize(target):
     try:
         if (socket.inet_aton(target)):
-            target = 'http://' + target
+            target = f'http://{target}'
     except (ValueError, socket.error):
         pass
     finally:
@@ -163,15 +161,14 @@ def print_error(e):
         print("Unknown url type")
 
     if isinstance(e, urllib.error.HTTPError):
-        print("[!] URL Returned an HTTP error: {}".format(
-              colorize(str(e.code), 'error')))
+        print(f"[!] URL Returned an HTTP error: {colorize(str(e.code), 'error')}")
 
     if isinstance(e, urllib.error.URLError):
         if "CERTIFICATE_VERIFY_FAILED" in str(e.reason):
             print("SSL: Certificate validation error.\nIf you want to \
     ignore it run the program with the \"-d\" option.")
         else:
-            print("Target host seems to be unreachable ({})".format(e.reason))
+            print(f"Target host seems to be unreachable ({e.reason})")
 
 
 def check_target(target, options):
@@ -197,9 +194,8 @@ def check_target(target, options):
     try:
         response = urllib.request.urlopen(request, timeout=10)
 
-    # Handling issues with HTTP/2
     except http.client.UnknownProtocol as e:
-        print("Unknown protocol: {}. Are you using a proxy? Try disabling it".format(e))
+        print(f"Unknown protocol: {e}. Are you using a proxy? Try disabling it")
     except Exception as e:
         print_error(e)
         sys.exit(1)
@@ -219,9 +215,9 @@ def is_https(target):
 
 def report(target, safe, unsafe):
     log("-------------------------------------------------------")
-    log("[!] Headers analyzed for {}".format(colorize(target, 'info')))
-    log("[+] There are {} security headers".format(colorize(str(safe), 'ok')))
-    log("[-] There are not {} security headers".format(colorize(str(unsafe), 'error')))
+    log(f"[!] Headers analyzed for {colorize(target, 'info')}")
+    log(f"[+] There are {colorize(str(safe), 'ok')} security headers")
+    log(f"[-] There are not {colorize(str(unsafe), 'error')} security headers")
 #    log("")
 
 
@@ -265,7 +261,6 @@ def main(options, targets):
 
     json_out = {}
     for target in targets:
-        json_headers = {}
         if port is not None:
             target = append_port(target, port)
 
@@ -277,10 +272,10 @@ def main(options, targets):
         rUrl = response.geturl()
         json_results = {}
 
-        log("[*] Analyzing headers of {}".format(colorize(target, 'info')))
-        log("[*] Effective URL: {}".format(colorize(rUrl, 'info')))
+        log(f"[*] Analyzing headers of {colorize(target, 'info')}")
+        log(f"[*] Effective URL: {colorize(rUrl, 'info')}")
         parse_headers(response.getheaders())
-        json_headers[f"{rUrl}"] = json_results
+        json_headers = {f"{rUrl}": json_results}
         json_results["present"] = {}
         json_results["missing"] = []
 
@@ -294,15 +289,16 @@ def main(options, targets):
 
                 # X-XSS-Protection Should be enabled
                 if safeh == 'X-XSS-Protection' and headers.get(lsafeh) == '0':
-                    log("[*] Header {} is present! (Value: {})".format(
-                            colorize(safeh, 'ok'),
-                            colorize(headers.get(lsafeh), 'warning')))
+                    log(
+                        f"[*] Header {colorize(safeh, 'ok')} is present! (Value: {colorize(headers.get(lsafeh), 'warning')})"
+                    )
 
-                # Printing generic message if not specified above
+
                 else:
-                    log("[*] Header {} is present! (Value: {})".format(
-                            colorize(safeh, 'ok'),
-                            headers.get(lsafeh)))
+                    log(
+                        f"[*] Header {colorize(safeh, 'ok')} is present! (Value: {headers.get(lsafeh)})"
+                    )
+
             else:
                 unsafe += 1
                 json_results["missing"].append(safeh)
@@ -316,8 +312,7 @@ def main(options, targets):
                     unsafe -= 1
                     json_results["missing"].remove(safeh)            
                     continue
-                log('[!] Missing security header: {}'.format(
-                    colorize(safeh, sec_headers.get(safeh))))
+                log(f'[!] Missing security header: {colorize(safeh, sec_headers.get(safeh))}')
 
         if information:
             json_headers["information_disclosure"] = {}
@@ -352,7 +347,7 @@ Value: {})".format(
                 log("[*] No caching headers detected")
 
         report(rUrl, safe, unsafe)
-        json_out.update(json_headers)
+        json_out |= json_headers
 
     if json_output:
         sys.stdout = sys.__stdout__

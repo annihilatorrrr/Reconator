@@ -11,19 +11,19 @@ cur = conn.cursor()
 #checks the db queue table every 60 secs
 while True:
  try:
-   cur.execute("select * from queue limit 1")
-   t = cur.fetchall()
-   t = t[0]
-   id = t[0]
-   url = t[1]
-   conn.commit()
-   cur.execute(f"delete from queue where id = '{id}'")
-   conn.commit()
+  cur.execute("select * from queue limit 1")
+  t = cur.fetchall()
+  t = t[0]
+  id = t[0]
+  url = t[1]
+  conn.commit()
+  cur.execute(f"delete from queue where id = '{id}'")
+  conn.commit()
 
    #sends to run.py
-   os.system('python run.py {}'.format(url))
-   #next scan starts after 1 minute
-   sleep(60)
+  os.system(f'python run.py {url}')
+  #next scan starts after 1 minute
+  sleep(60)
 
  except:
    sleep(60)
